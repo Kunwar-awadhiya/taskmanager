@@ -4,6 +4,7 @@ import { edit, trash } from "@/app/utils/Icons";
 import React from "react";
 import styled from "styled-components";
 import formatDate from "@/app/utils/formatDate";
+import { useState } from "react";
 
 interface Props {
   title: string;
@@ -15,56 +16,80 @@ interface Props {
 
 function TaskItem({ title, description, date, isCompleted, id }: Props) {
   const { theme, deleteTask, updateTask } = useGlobalState();
-  return (
-    <TaskItemStyled theme={theme}>
-      <h1>{title}</h1>
-      <p>{description}</p>
-      <p className="date">{formatDate(date)}</p>
-      <div className="task-footer">
-        {isCompleted ? (
-          <button
-            className="completed"
-            onClick={() => {
-              const task = {
-                id,
-                isCompleted: !isCompleted,
-              };
 
-              updateTask(task);
-            }}
-          >
-            Completed
-          </button>
-        ) : (
-          <button
-            className="incomplete"
-            onClick={() => {
-              const task = {
-                id,
-                isCompleted: !isCompleted,
-              };
+   const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(title);
+  const [editDescription, setEditDescription] = useState(description);
 
-              updateTask(task);
-            }}
+  const handleUpdate = () => {
+    updateTask({
+      id,
+      title: editTitle,
+      description: editDescription,
+      isCompleted,
+    });
+    setIsEditing(false);
+  };
+
+
+   return (
+  <TaskItemStyled theme={theme}>
+    {isEditing ? (
+      <>
+        <input
+          type="text"
+          value={editTitle}
+          onChange={(e) => setEditTitle(e.target.value)}
+        />
+        <textarea
+          value={editDescription}
+          onChange={(e) => setEditDescription(e.target.value)}
+        />
+        <div className="task-footer">
+          <button onClick={handleUpdate}>Save</button>
+          <button onClick={() => setIsEditing(false)}>Cancel</button>
+        </div>
+      </>
+    ) : (
+      <>
+        <h1>{title}</h1>
+        <p>{description}</p>
+        <p className="date">{formatDate(date)}</p>
+
+        <div className="task-footer">
+          <button
+            className={isCompleted ? "completed" : "incomplete"}
+            onClick={() => updateTask({ id, isCompleted: !isCompleted })}
           >
-            Incomplete
+            {isCompleted ? "Completed" : "Incomplete"}
           </button>
-        )}
-        <button className="edit">{edit}</button>
-        <button
-          className="delete"
-          onClick={() => {
-            deleteTask(id);
-          }}
-        >
-          {trash}
-        </button>
-      </div>
-    </TaskItemStyled>
-  );
+
+          <button className="edit" onClick={() => setIsEditing(true)}>
+            {edit}
+          </button>
+
+          <button className="delete" onClick={() => deleteTask(id)}>
+            {trash}
+          </button>
+        </div>
+      </>
+    )}
+  </TaskItemStyled>
+);
+
 }
 
 const TaskItemStyled = styled.div`
+
+  input,
+  textarea {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid ${(props) => props.theme.borderColor2};
+  border-radius: 0.5rem;
+}
+
   padding: 1.2rem 1rem;
   border-radius: 1rem;
   background-color: ${(props) => props.theme.borderColor2};
